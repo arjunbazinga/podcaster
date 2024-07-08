@@ -1,4 +1,4 @@
-name: Enforce Semantic Versioning
+name: Semantic Versioning Label Check
 
 on:
   pull_request:
@@ -10,9 +10,14 @@ jobs:
 
     steps:
       - name: Check for semantic versioning label
-        id: check_label
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "$(jq -r '.pull_request.labels | map(.name) | join(",")' $GITHUB_EVENT_PATH)" != *"major"* ] && [ "$(jq -r '.pull_request.labels | map(.name) | join(",")' $GITHUB_EVENT_PATH)" != *"minor"* ] && [ "$(jq -r '.pull_request.labels | map(.name) | join(",")' $GITHUB_EVENT_PATH)" != *"patch"* ]; then
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name')
+          if echo "$LABELS" | grep -qE "major|minor|patch"; then
+            echo "Semantic versioning label found."
+          else
             echo "No semantic versioning label found. Please add a 'major', 'minor', or 'patch' label to this PR."
             exit 1
           fi
