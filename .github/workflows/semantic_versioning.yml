@@ -1,0 +1,18 @@
+name: Enforce Semantic Versioning
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-label:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check for semantic versioning label
+        id: check_label
+        run: |
+          if [ "$(jq -r '.pull_request.labels | map(.name) | join(",")' $GITHUB_EVENT_PATH)" != *"major"* ] && [ "$(jq -r '.pull_request.labels | map(.name) | join(",")' $GITHUB_EVENT_PATH)" != *"minor"* ] && [ "$(jq -r '.pull_request.labels | map(.name) | join(",")' $GITHUB_EVENT_PATH)" != *"patch"* ]; then
+            echo "No semantic versioning label found. Please add a 'major', 'minor', or 'patch' label to this PR."
+            exit 1
+          fi
